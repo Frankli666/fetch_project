@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>fetch</title>
+   	  <meta charset="utf-8">
+  </head>
+
+  <body>
+
+		  {% if user.is_authenticated %}
+		  <h1> Welcome to Fetch {{ user.username }}!!!</h1>
+      <a href="/fetch/restricted/">Restricted Page</a><br />
+      
+            
+              <ul class="nav nav-list">
+				<li class="nav-header">Fetch a friend</li>
+				<form>
+				<label></label>
+				<li><input  class="search-query span10" type="text" name="suggestion" value="" id="suggestion" /></li>
+				</form>
+			</ul>
+            <ul>
+      <a href="/fetch/logout">Logout</a><br />
+      
+		  {% else %}
+		  <h1> Fetch says... Coding is Fun!!!</h1>
+      <a href='/fetch/register'>Register</a><br />
+      <a href='/fetch/login'>Login</a><br />
+      
+<!--       3.8 -->
+      <a href='/fetch/forgetPassword'>Forget Password</a> <br />
+
+      
+      
+		  {% endif %}
+
+  </body>
+</html>
