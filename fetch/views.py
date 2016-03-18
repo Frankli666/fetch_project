@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
-# from rango.bing_search import run_query
+from fetch.bing_search import run_query
 
 # from rango.models import Category
 # from rango.models import Page
@@ -66,6 +66,29 @@ def user_login(request):
             return HttpResponse("Invalid login details supplied")
     else:
         return render(request, 'fetch/login.html', {})
+        
+def search(request):
+
+    result_list = []
+
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            # Run our Bing function to get the results list!
+            result_list = run_query(query)
+
+    return render(request, 'fetch/search.html', {'result_list': result_list}) 
+
+# def search(request):
+# 	UserName = MasterUser.objects.filter(username="Abin")
+# 
+#         # Adds our results list to the template context under name pages.
+#         context_dict['username'] = Username
+# 	
+# 	
+#     return render(request, 'fetch/login.html', context_dict) 
+            
 #         
 # def search(request):
 # 
@@ -92,7 +115,7 @@ def forgetPassword(request):
 #                 forgetPassword(request, username)
 #                 return HttpResponseRedirect("We would send a confirm to your email.")
          
- 	return render(request, 'fetch/forgetPassword.html', {})
+ 	return render(request, 'registration/password_reset_email.html', {})
 
 
 def track_url(request):
