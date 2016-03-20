@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from fetch.bing_search import run_query
+from django.shortcuts import render_to_response
 
 # from rango.models import Category
 # from rango.models import Page
@@ -17,15 +18,16 @@ from fetch.bing_search import run_query
 # from django.contrib.auth.models import User
 # from django.shortcuts import redirect
 
-from fetch.models import Sharer, Getter, Connection
+from fetch.models import MasterUser
 from fetch.forms import UserForm
+
 
 def index(request):
     return render(request, 'fetch/index.html')
-	
+
 
 def register(request):
-    registered =False
+    registered = False
 
     if request.method == 'POST':
         user_form = UserForm(data=request.POST)
@@ -47,8 +49,8 @@ def register(request):
                   'fetch/register.html',
                   {'user_form': user_form, 'registered': registered})
 
-def user_login(request):
 
+def user_login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -66,9 +68,9 @@ def user_login(request):
             return HttpResponse("Invalid login details supplied")
     else:
         return render(request, 'fetch/login.html', {})
-        
-def search(request):
 
+
+def search(request):
     result_list = []
 
     if request.method == 'POST':
@@ -78,7 +80,8 @@ def search(request):
             # Run our Bing function to get the results list!
             result_list = run_query(query)
 
-    return render(request, 'fetch/search.html', {'result_list': result_list}) 
+    return render(request, 'fetch/search.html', {'result_list': result_list})
+
 
 # def search(request):
 # 	UserName = MasterUser.objects.filter(username="Abin")
@@ -88,7 +91,7 @@ def search(request):
 # 	
 # 	
 #     return render(request, 'fetch/login.html', context_dict) 
-            
+
 #         
 # def search(request):
 # 
@@ -102,20 +105,19 @@ def search(request):
 #             result_list = run_query(query)
 # 
 #     return render(request, 'rango/search.html', {'result_list': result_list})
-        
+
 # 3.8new
 def forgetPassword(request):
+    # 	if request.method == 'POST':
+    #     		username = request.POST.get('username')
+    #     		user = authenticate(username=username)
+    #
+    #         if user:
+    #             if username.is_active:
+    #                 forgetPassword(request, username)
+    #                 return HttpResponseRedirect("We would send a confirm to your email.")
 
-# 	if request.method == 'POST':
-#     		username = request.POST.get('username')
-#     		user = authenticate(username=username)
-# 
-#         if user:
-#             if username.is_active:
-#                 forgetPassword(request, username)
-#                 return HttpResponseRedirect("We would send a confirm to your email.")
-         
- 	return render(request, 'registration/password_reset_email.html', {})
+    return render(request, 'registration/password_reset_email.html', {})
 
 
 def track_url(request):
@@ -134,14 +136,15 @@ def track_url(request):
                 pass
 
     return redirect(url)
-    
+
+
 def add_category(request):
     # Get the context from the request.
     context = RequestContext(request)
     cat_list = get_category_list()
     context_dict = {}
     context_dict['cat_list'] = cat_list
-    
+
     # A HTTP POST?
     if request.method == 'POST':
         form = CategoryForm(request.POST)
@@ -155,7 +158,7 @@ def add_category(request):
             # The user will be shown the homepage.
             return index(request)
         else:
-	        # The supplied form contained errors - just print them to the terminal.
+            # The supplied form contained errors - just print them to the terminal.
             print form.errors
     else:
         # If the request was not a POST, display the form to enter details.
@@ -165,6 +168,7 @@ def add_category(request):
     # Render the form with error messages (if any).
     context_dict['form'] = form
     return render_to_response('rango/add_category.html', context_dict, context)
+
 
 @login_required
 def add_page(request, category_name_url):
@@ -176,7 +180,7 @@ def add_page(request, category_name_url):
     category_name = decode_url(category_name_url)
     if request.method == 'POST':
         form = PageForm(request.POST)
-        
+
         if form.is_valid():
             # This time we cannot commit straight away.
             # Not all fields are automatically populated!
@@ -187,7 +191,7 @@ def add_page(request, category_name_url):
                 cat = Category.objects.get(name=category_name)
                 page.category = cat
             except Category.DoesNotExist:
-                return render_to_response( 'rango/add_page.html',
+                return render_to_response('rango/add_page.html',
                                           context_dict,
                                           context)
 
@@ -204,38 +208,62 @@ def add_page(request, category_name_url):
     else:
         form = PageForm()
 
-    context_dict['category_name_url']= category_name_url
-    context_dict['category_name'] =  category_name
+    context_dict['category_name_url'] = category_name_url
+    context_dict['category_name'] = category_name
     context_dict['form'] = form
 
-    return render_to_response( 'rango/add_page.html',
-                               context_dict,
-                               context)
+    return render_to_response('rango/add_page.html',
+                              context_dict,
+                              context)
 
-    
+
 def profile(request):
     context = RequestContext(request)
     cat_list = get_category_list()
     context_dict = {'cat_list': cat_list}
     u = User.objects.get(username=request.user)
-    
+
     try:
         up = UserProfile.objects.get(user=u)
     except:
         up = None
-    
+
     context_dict['user'] = u
     context_dict['userprofile'] = up
     return render_to_response('rango/profile.html', context_dict, context)
-	
-	
-	
+
+
+def masteruser(request, masteruser_username_slug):
+    context_dict = {}
+    context_dict['result_list'] = None
+    context_dict['query'] = None
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            result_list = run_query(query)
+
+            context_dict['result_list'] = result_list
+            context_dict['query'] = query
+    try:
+        masteruser = MasterUser.objects.get(slug=masteruser_username_slug)
+        context_dict['masteruser_username'] = MasterUser.username
+        context_dict['masteruser'] = masteruser
+    except MasterUser.DoesNotExist:
+        pass
+
+    if not context_dict['query']:
+        context_dict['query'] = masteruser.username
+
+    return render(request, 'fetch/masteruser.html', context_dict)
+
+
 @login_required
 def restricted(request):
     return HttpResponse("Since you're logged in, you can see this text!")
 
+
 @login_required
 def user_logout(request):
-
     logout(request)
     return HttpResponseRedirect('/fetch/')
