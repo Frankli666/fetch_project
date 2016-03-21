@@ -3,20 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from fetch.bing_search import run_query
-from django.shortcuts import render_to_response
+from django.contrib.auth.models import User
 
-# from rango.models import Category
-# from rango.models import Page
-# from rango.models import UserProfile
-# from rango.forms import UserForm, UserProfileForm
-# from rango.forms import CategoryForm, PageForm
-# from django.contrib.auth import authenticate, login, logout
-# from django.http import HttpResponseRedirect
-# from django.contrib.auth.decorators import login_required
-# from datetime import datetime
-# from rango.bing_search import run_query
-# from django.contrib.auth.models import User
-# from django.shortcuts import redirect
 
 from fetch.models import MasterUser
 from fetch.forms import UserForm
@@ -97,17 +85,21 @@ def masteruser(request, masteruser_username_slug):
     return render(request, 'fetch/masteruser.html', context_dict)
 
 
+
+
+
 def search(request):
-    result_list = []
+
+    context_dict={}
 
     if request.method == 'POST':
         query = request.POST['query'].strip()
 
-        if query:
-            # Run our Bing function to get the results list!
-            result_list = run_query(query)
+        result_list = User.objects.filter(username=query)
+        context_dict['result_list'] = result_list
+        print result_list
 
-    return render(request, 'fetch/search.html', {'result_list': result_list})
+    return render(request,'fetch/search.html',context_dict)
 
 
 # def search(request):
