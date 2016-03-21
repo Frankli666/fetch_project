@@ -38,6 +38,7 @@ class MasterUser(ChangesMixin, models.Model):
     country = models.CharField(default='', max_length=20)
     nationality = models.CharField(default='', max_length=10)
     language = models.CharField(default='', max_length=10)
+    slug = models.SlugField()
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.username)

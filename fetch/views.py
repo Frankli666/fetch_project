@@ -68,6 +68,33 @@ def user_login(request):
             return HttpResponse("Invalid login details supplied")
     else:
         return render(request, 'fetch/login.html', {})
+        
+        
+        
+        
+def masteruser(request, masteruser_username_slug):
+    context_dict = {}
+    context_dict['result_list'] = None
+    context_dict['query'] = None
+    if request.method == 'POST':
+        query = request.POST['query'].strip()
+
+        if query:
+            result_list = run_query(query)
+
+            context_dict['result_list'] = result_list
+            context_dict['query'] = query
+    try:
+        masteruser = MasterUser.objects.get(slug=masteruser_username_slug)
+        context_dict['masteruser_username'] = MasterUser.username
+        context_dict['masteruser'] = masteruser
+    except MasterUser.DoesNotExist:
+        pass
+
+    if not context_dict['query']:
+        context_dict['query'] = masteruser.username
+
+    return render(request, 'fetch/masteruser.html', context_dict)
 
 
 def search(request):
@@ -120,142 +147,12 @@ def forgetPassword(request):
     return render(request, 'registration/password_reset_email.html', {})
 
 
-def track_url(request):
-    context = RequestContext(request)
-    page_id = None
-    url = '/fetch/'
-    if request.method == 'GET':
-        if 'page_id' in request.GET:
-            page_id = request.GET['page_id']
-            try:
-                page = Page.objects.get(id=page_id)
-                page.views = page.views + 1
-                page.save()
-                url = page.url
-            except:
-                pass
-
-    return redirect(url)
 
 
-def add_category(request):
-    # Get the context from the request.
-    context = RequestContext(request)
-    cat_list = get_category_list()
-    context_dict = {}
-    context_dict['cat_list'] = cat_list
-
-    # A HTTP POST?
-    if request.method == 'POST':
-        form = CategoryForm(request.POST)
-
-        # Have we been provided with a valid form?
-        if form.is_valid():
-            # Save the new category to the database.
-            form.save(commit=True)
-
-            # Now call the index() view.
-            # The user will be shown the homepage.
-            return index(request)
-        else:
-            # The supplied form contained errors - just print them to the terminal.
-            print form.errors
-    else:
-        # If the request was not a POST, display the form to enter details.
-        form = CategoryForm()
-
-    # Bad form (or form details), no form supplied...
-    # Render the form with error messages (if any).
-    context_dict['form'] = form
-    return render_to_response('rango/add_category.html', context_dict, context)
 
 
-@login_required
-def add_page(request, category_name_url):
-    context = RequestContext(request)
-    cat_list = get_category_list()
-    context_dict = {}
-    context_dict['cat_list'] = cat_list
-
-    category_name = decode_url(category_name_url)
-    if request.method == 'POST':
-        form = PageForm(request.POST)
-
-        if form.is_valid():
-            # This time we cannot commit straight away.
-            # Not all fields are automatically populated!
-            page = form.save(commit=False)
-
-            # Retrieve the associated Category object so we can add it.
-            try:
-                cat = Category.objects.get(name=category_name)
-                page.category = cat
-            except Category.DoesNotExist:
-                return render_to_response('rango/add_page.html',
-                                          context_dict,
-                                          context)
-
-            # Also, create a default value for the number of views.
-            page.views = 0
-
-            # With this, we can then save our new model instance.
-            page.save()
-
-            # Now that the page is saved, display the category instead.
-            return category(request, category_name_url)
-        else:
-            print form.errors
-    else:
-        form = PageForm()
-
-    context_dict['category_name_url'] = category_name_url
-    context_dict['category_name'] = category_name
-    context_dict['form'] = form
-
-    return render_to_response('rango/add_page.html',
-                              context_dict,
-                              context)
 
 
-def profile(request):
-    context = RequestContext(request)
-    cat_list = get_category_list()
-    context_dict = {'cat_list': cat_list}
-    u = User.objects.get(username=request.user)
-
-    try:
-        up = UserProfile.objects.get(user=u)
-    except:
-        up = None
-
-    context_dict['user'] = u
-    context_dict['userprofile'] = up
-    return render_to_response('rango/profile.html', context_dict, context)
-
-
-def masteruser(request, masteruser_username_slug):
-    context_dict = {}
-    context_dict['result_list'] = None
-    context_dict['query'] = None
-    if request.method == 'POST':
-        query = request.POST['query'].strip()
-
-        if query:
-            result_list = run_query(query)
-
-            context_dict['result_list'] = result_list
-            context_dict['query'] = query
-    try:
-        masteruser = MasterUser.objects.get(slug=masteruser_username_slug)
-        context_dict['masteruser_username'] = MasterUser.username
-        context_dict['masteruser'] = masteruser
-    except MasterUser.DoesNotExist:
-        pass
-
-    if not context_dict['query']:
-        context_dict['query'] = masteruser.username
-
-    return render(request, 'fetch/masteruser.html', context_dict)
 
 
 @login_required
